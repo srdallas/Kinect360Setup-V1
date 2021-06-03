@@ -1,87 +1,104 @@
-# Kinect360Setup-V1
+# Setup Skeleton Markers
+1. Download the following repos:
 
-starting here https://www.kdab.com/setting-up-kinect-for-programming-in-linux-part-1/
+`git clone https://github.com/OpenKinect/libfreenect`
 
-1. Envrionment Setup
+`git clone https://github.com/OpenNI/OpenNI`
 
-This command : sudo add-apt-repository "deb http://archive.canonical.com/ lucid partner"
+`git clone https://github.com/arnaud-ramey/NITE-Bin-Dev-Linux-v1.5.2.23`
 
-change to this:   sudo add-apt-repository "deb http://archive.canonical.com/ bionic partner"
 
-This reason is that the lucid or bionic keyword changes depending on your Ubuntu version, the one I used was 18.04 which is known as bionic beaver.
-	
-For the java line that fails I used this to install java https://www.digitalocean.com/community/tutorials/how-to-install-java-with-apt-on-ubuntu-18-04 
+2. Install the following packages:
 
-I am not entirely sure if Java is needed for this to work but I will do so to preemptively handle any errors. Note: I installed both the JRE and the JDK.
+`sudo apt-get install cmake freeglut3-dev pkg-config build-essential libxmu-dev libxi-dev libusb-1.0-0-dev python`
 
-1. Install openKinect (libFreenect)	
+`sudo add-apt-repository "deb http://archive.canonical.com/ lucid partner"`
 
-Everything here should work fine except for when they tell you to test it. Because you had to install libfreenect the command to test it is not `glview` but `freenect-glview`.
+`sudo apt-get update`
 
-DO NOT DO PART 2. Install OpenNi	
-I would stop here because this is when things start to be deprecated and instead we are going to go on our own to install the rest. Such that we will eventually have ros running with a skeleton marker program.
+`sudo apt-get install doxygen mono-complete graphviz`
 
-getting error build failed on running command ./RedistMaker
+3. Install openKinect (libFreenect)
 
-fix was found using this: https://github.com/OpenNI/OpenNI/issues/26 
-if you don’t want to read the thread just run these commands: 
+ **in libfreenect directory, in the KinectLibs dir**
 
-sudo apt-get install mono-complete
-sudo apt install gcc-4.8 g++-4.8
-sudo apt install clang-3.9 clang-4.0
+`mkdir build`
 
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 10
-sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 10
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 20
-sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 20
-echo "alias clang++=\"clang++-3.5\"" >> .bashrc
-(not sure if this line even does anything) export CXX=clang++ yaourt -S openni
-sudo apt install clang
+`cd build`
 
-NOTE: After this section or later when you finish you will need to redo this line but as this:
+`cmake ..`
 
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 20
-sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 20
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 10
-sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 10
-after running all of those commands aside from the NOTE 
-do this command: sudo ./RedistMaker
-fixed this error with this https://www.oreilly.com/library/view/kinect-hacks/9781449332181/ch01.html 
-https://anwiki.artsaucarre.be/index.php?title=OpenNI_and_NITE_on_linux 
-commands to run:
-cd KinectLibs/OpenNI/Platform/Linux/Redist/OpenNI-Bin-Dev-Linux-x64-v1.5.4.0/
-sudo ./install.sh	
+`make`
 
-$ cd SensorKinect
-$ cd Platform/Linux/CreateRedist
-$ chmod +x RedistMaker
-$ ./RedistMaker
-$ cd ../Redist/Sensor-Bin-Linux-[xxx] (where [xxx] is your architecture and this particular OpenNI release)
-$ chmod +x install.sh
-$ sudo ./install.sh
+`sudo make install`
 
-also git cloned this is https://github.com/arnaud-ramey/NITE-Bin-Dev-Linux-v1.5.2.23 and followed the commands in its read.me
+`sudo ldconfig /usr/local/lib64/`
 
-NOW OpenNI User tracking should be working just fine
+`sudo chmod a+rw /dev/bus/usb//`
 
---ROS section--
+`lsusb | grep Xbox`
 
-git clone these two into your src folder
+You should see this:
+>Bus 003 Device 005: ID 045e:02ae Microsoft Corp. Xbox NUI Camera
+>
+>Bus 003 Device 003: ID 045e:02b0 Microsoft Corp. Xbox NUI Motor
+>
+>Bus 003 Device 004: ID 045e:02ad Microsoft Corp. Xbox NUI Audio
 
-git clone https://github.com/pirobot/skeleton_markers
+4. Test libfreenect by running
 
-git clone https://github.com/ros-drivers/openni_camera
+`freenect-glview`
 
-cd ..
+A window like this will appear
 
-catkin_make
+`need to put image here`
 
-open a new terminal
+- We will use libfreenect to control the tilt and the led (so the device Xbox NUI Motor, which also handle the led).
 
-run roscore
+- We will use OpenNi + Sensor module to get the camera streams (the device Xbox NUI Camera)
 
-go back to original terminal
+- We will use NITE libraries in concert with OpenNI to get the high level API (so gesture recognition, hand/skeleton tracking and so on)
 
-source devel/setup.bash
 
-roslaunch skeleton_markers skeleton.tracker
+5. Install OpenNi
+
+**In OpenNI directory**
+
+`cd Platform/Linux/CreateRedist`
+
+`chmod +x ./RedistMaker`
+
+`./RedistMaker`
+
+`sudo ./install.sh`
+
+If you see the process is failed, don’t panic. That’s OK.
+
+6. Install NITE
+
+`cd NITE-Bin-Dev-Linux-v1.5.2.23/x64`
+
+`sudo sh install.sh`
+
+7. Install skeleton_markers ROS package
+
+`cd catkin_ws/src`
+
+`git clone https://github.com/pirobot/skeleton_markers`
+
+`cd ..`
+
+`catkin_make`
+
+`source devel/setup.bash`
+
+`roscore`
+
+`roslaunch skeleton_markers markers.launch`
+
+
+This window should appear:
+
+`insert image here`
+
+Enjoy
